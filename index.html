@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>География 5 класс. Параграфы 1-5. Тренажёр</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#15181d; --muted:#5c6470;
+    --line:#d8dce3; --ok:#1c7a43; --okbg:#e7f6ec; --bad:#a32020; --badbg:#fdecec;
+    --accent:#1f3f7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:17px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:14px}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:15px;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+        padding:16px;margin-bottom:14px}
+  .rounds{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:15px;color:var(--muted)}
+  .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);
+       display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--muted)}
+  .dot.done{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+         background:#fff;padding:11px 14px}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button:disabled{opacity:.55;cursor:default}
+  .topic{display:block;width:100%;text-align:left;margin-bottom:8px;font-weight:600}
+  .bar{height:8px;background:#e9ecf1;border-radius:6px;overflow:hidden;margin:10px 0 2px}
+  .bar > i{display:block;height:100%;background:var(--accent);width:0}
+  .meta{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
+  .q{font-size:19px;font-weight:600;margin:6px 0 12px}
+  .opt{display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px}
+  .opt.ok{background:var(--okbg);border-color:var(--ok)}
+  .opt.bad{background:var(--badbg);border-color:var(--bad)}
+  .verdict{margin-top:10px;padding:11px 13px;border-radius:10px;font-size:16px}
+  .verdict.ok{background:var(--okbg);border:1px solid var(--ok)}
+  .verdict.bad{background:var(--badbg);border:1px solid var(--bad)}
+  input[type=text]{font:inherit;padding:11px 12px;border:1px solid var(--line);
+                   border-radius:10px;width:160px}
+  .hid{display:none}
+  .score{font-size:28px;font-weight:700;margin:6px 0}
+  .tag{display:inline-block;background:#eef1f6;border-radius:8px;padding:2px 8px;
+       font-size:13px;color:var(--muted);margin-bottom:8px}
+  ul.err{padding-left:20px;margin:8px 0 0}
+  ul.err li{margin-bottom:6px;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>География 5 класс. Параграфы 1-5</h1>
+  <p class="sub">Учебник «Полярная звезда». Цель: пройти каждый параграф 5 раз без ошибок.</p>
+
+  <div class="card" id="menu">
+    <div class="tag">Выбери, что тренировать</div>
+    <div id="topics"></div>
+    <div class="btns">
+      <button class="primary" id="btn-all">Все параграфы подряд</button>
+      <button id="btn-reset">Сбросить прогресс</button>
+    </div>
+  </div>
+
+  <div class="card hid" id="game">
+    <div class="meta"><span id="g-topic"></span><span id="g-count"></span></div>
+    <div class="bar"><i id="g-bar"></i></div>
+    <div class="q" id="g-q"></div>
+    <div id="g-opts"></div>
+    <div id="g-input" class="hid">
+      <input type="text" id="g-text" inputmode="numeric" autocomplete="off" placeholder="год">
+      <button class="primary" id="g-check">Проверить</button>
+    </div>
+    <div class="verdict hid" id="g-verdict"></div>
+    <div class="btns">
+      <button class="primary hid" id="g-next">Дальше</button>
+      <button id="g-quit">Выйти в меню</button>
+    </div>
+  </div>
+
+  <div class="card hid" id="result">
+    <div class="tag" id="r-topic"></div>
+    <div class="score" id="r-score"></div>
+    <div id="r-text"></div>
+    <div id="r-errors"></div>
+    <div class="btns">
+      <button class="primary" id="r-again">Пройти ещё раз</button>
+      <button id="r-menu">В меню</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOPICS = [
+  {id:"p1", name:"§ 1. Зачем нам география"},
+  {id:"p2", name:"§ 2. География в древности"},
+  {id:"p3", name:"§ 3. География в Средние века"},
+  {id:"p4", name:"§ 4. Великие географические открытия"},
+  {id:"p5", name:"§ 5. Открытия XVII, XVIII, XIX и XX веков"}
+];
+
+// t: тип. "c" выбор ответа, "y" ввод года.
+const Q = [
+// § 1
+{t:"c",p:"p1",q:"Что такое географический объект?",a:"Целостное образование на Земле: созданное природой или человеком",o:["Событие, которое видно в один момент","Длинная цепочка изменений","Наука о картах"]},
+{t:"c",p:"p1",q:"Что из этого географический объект?",a:"Город Сочи",o:["Ливень","Землетрясение","Молния"]},
+{t:"c",p:"p1",q:"Что из этого географическое явление?",a:"Молния",o:["Мост","Гора","Материк"]},
+{t:"c",p:"p1",q:"Что такое географический процесс?",a:"Длительная последовательность изменений в природе или обществе",o:["Событие в конкретный момент","Созданный человеком объект","Собрание карт"]},
+{t:"c",p:"p1",q:"Что изучает физическая география?",a:"Природу Земли",o:["Хозяйство и население","Методы создания карт","Космос"]},
+{t:"c",p:"p1",q:"Что изучает социально-экономическая география?",a:"Людей, их хозяйство и размещение по территории",o:["Строение земной коры","Погоду и климат","Карты и глобусы"]},
+{t:"c",p:"p1",q:"Что такое картография?",a:"Наука о создании, изучении и использовании карт",o:["Наука о почвах","Наука о населении","Наука о звёздах"]},
+{t:"c",p:"p1",q:"Что значит ориентироваться?",a:"Определять своё положение относительно сторон горизонта",o:["Чертить карту","Считать расстояния","Описывать погоду"]},
+{t:"c",p:"p1",q:"Кому география была жизненно нужна раньше всего?",a:"Мореплавателям и купцам",o:["Художникам","Строителям пирамид","Врачам"]},
+{t:"c",p:"p1",q:"В честь чего назван учебник «Полярная звезда»?",a:"В честь главного навигационного ориентира",o:["В честь города","В честь корабля","В честь автора"]},
+// § 2
+{t:"c",p:"p2",q:"Как представляли Землю в Древней Индии?",a:"Плоская Земля на слонах, а слоны на черепахе",o:["Земля как гора","Земля как квадрат","Земля как шар"]},
+{t:"c",p:"p2",q:"Как представляли Землю в Вавилоне?",a:"Как гору",o:["Как квадрат","Как диск на слонах","Как куб"]},
+{t:"c",p:"p2",q:"Как представляли Землю в Древнем Китае?",a:"Как квадрат, а свою страну в центре мира",o:["Как гору","Как шар","Как диск на черепахе"]},
+{t:"c",p:"p2",q:"Что такое «Срединное государство»?",a:"Древнекитайское название своей страны как центра мира",o:["Название Вавилона","Название Греции","Название Египта"]},
+{t:"c",p:"p2",q:"Что греки называли Океаном?",a:"Великую реку, окружающую всю обитаемую сушу",o:["Средиземное море","Атлантический океан","Чёрное море"]},
+{t:"c",p:"p2",q:"Кто изобрёл колесо?",a:"Шумеры",o:["Египтяне","Греки","Финикийцы"]},
+{t:"c",p:"p2",q:"Кто изобрёл парус?",a:"Египтяне",o:["Шумеры","Викинги","Арабы"]},
+{t:"c",p:"p2",q:"Кто первым стал ориентироваться в открытом море по небесным светилам?",a:"Древние греки",o:["Китайцы","Арабы","Шумеры"]},
+{t:"c",p:"p2",q:"Кто составил первую карту мира и выделил три части света?",a:"Гекатей",o:["Эратосфен","Птолемей","Гомер"]},
+{t:"c",p:"p2",q:"Какие три части света выделили античные учёные?",a:"Европа, Азия, Ливия",o:["Европа, Азия, Америка","Азия, Африка, Австралия","Европа, Африка, Антарктида"]},
+{t:"c",p:"p2",q:"Кто доказал шарообразность Земли по форме тени при лунных затмениях?",a:"Аристотель",o:["Гекатей","Страбон","Геродот"]},
+{t:"c",p:"p2",q:"Кто вычислил размеры Земли и ввёл слово «географика»?",a:"Эратосфен",o:["Аристотель","Птолемей","Гомер"]},
+{t:"c",p:"p2",q:"Кто описывал Землю как диск?",a:"Гомер",o:["Аристотель","Эратосфен","Птолемей"]},
+{t:"c",p:"p2",q:"Чем торговали финикийцы?",a:"Кедром и пурпурными тканями",o:["Пряностями и золотом","Картофелем и томатами","Шёлком и чаем"]},
+{t:"c",p:"p2",q:"По поручению какого фараона финикийцы обошли вокруг Африки?",a:"Нехо II",o:["Тутанхамона","Рамсеса II","Хеопса"]},
+{t:"c",p:"p2",q:"Кто написал о плавании финикийцев вокруг Африки?",a:"Геродот",o:["Гомер","Аристотель","Страбон"]},
+// § 3
+{t:"c",p:"p3",q:"Что случилось с географическими знаниями в Европе после падения Рима?",a:"Античные знания забыли, науку сменили религиозные мифы",o:["Знания быстро выросли","Появились первые атласы","Открыли Америку"]},
+{t:"c",p:"p3",q:"Где в Средние века сохранялись сведения о мире?",a:"В монастырях",o:["В университетах","В музеях","В школах"]},
+{t:"c",p:"p3",q:"Что такое паломничество?",a:"Путешествие к святым местам с религиозными целями",o:["Военный поход","Торговая поездка","Научная экспедиция"]},
+{t:"c",p:"p3",q:"Кто описал Китай в Средние века?",a:"Марко Поло",o:["Афанасий Никитин","Ибн Баттута","Эрик Рыжий"]},
+{t:"c",p:"p3",q:"Кто написал «Хожение за три моря»?",a:"Афанасий Никитин",o:["Марко Поло","Ибн Баттута","Лейф Счастливый"]},
+{t:"c",p:"p3",q:"Куда путешествовал Афанасий Никитин?",a:"В Индию",o:["В Китай","В Гренландию","В Америку"]},
+{t:"c",p:"p3",q:"Как ещё называют викингов?",a:"Норманны, варяги",o:["Конкистадоры","Финикийцы","Аборигены"]},
+{t:"c",p:"p3",q:"Кто открыл Гренландию?",a:"Эрик Рыжий",o:["Лейф Счастливый","Виллем Баренц","Абель Тасман"]},
+{t:"c",p:"p3",q:"Кто достиг Северной Америки задолго до Колумба?",a:"Лейф Счастливый, сын Эрика Рыжего",o:["Эрик Рыжий","Марко Поло","Френсис Дрейк"]},
+{t:"c",p:"p3",q:"Какие острова открыли викинги, кроме Гренландии?",a:"Исландию и Фарерские острова",o:["Канарские и Азорские","Британские и Шетландские","Курильские"]},
+{t:"c",p:"p3",q:"Что такое саги?",a:"Древнеисландские повествования, где записаны открытия викингов",o:["Карты викингов","Корабли викингов","Их боги"]},
+{t:"c",p:"p3",q:"Что такое килевое судно?",a:"Корабль с продольным брусом внизу, годный для дальних переходов",o:["Плоскодонная лодка","Плот из брёвен","Весельная галера"]},
+{t:"c",p:"p3",q:"Чем арабы помогли науке в Средние века?",a:"Перевели и сохранили труды античных учёных",o:["Открыли Америку","Изобрели парус","Создали первые атласы"]},
+{t:"c",p:"p3",q:"Сколько прошёл Ибн Баттута и за какое время?",a:"120 000 км за 25 лет",o:["12 000 км за 5 лет","50 000 км за 10 лет","200 000 км за 40 лет"]},
+// § 4
+{t:"c",p:"p4",q:"Почему началась эпоха Великих географических открытий?",a:"Европе нужны были пряности и золото, а сухопутные пути контролировали арабы",o:["Европейцы искали новые пастбища","Хотели найти Антарктиду","Искали северный морской путь"]},
+{t:"c",p:"p4",q:"Какая страна первой начала искать путь вокруг Африки?",a:"Португалия",o:["Испания","Англия","Нидерланды"]},
+{t:"c",p:"p4",q:"Кто покровительствовал португальским поискам?",a:"Генрих Мореплаватель",o:["Нехо II","Магеллан","Колумб"]},
+{t:"y",p:"p4",q:"В каком году Бартоломеу Диаш обогнул юг Африки?",a:"1487"},
+{t:"c",p:"p4",q:"Какой мыс обогнул Бартоломеу Диаш?",a:"Мыс Доброй Надежды",o:["Мыс Горн","Мыс Челюскин","Мыс Канаверал"]},
+{t:"y",p:"p4",q:"В каком году Колумб открыл Америку?",a:"1492"},
+{t:"c",p:"p4",q:"Чем Колумб считал открытые земли до конца жизни?",a:"Индией",o:["Новым материком","Африкой","Австралией"]},
+{t:"y",p:"p4",q:"В каком году Васко да Гама дошёл морем до Индии?",a:"1498"},
+{t:"c",p:"p4",q:"Кто возглавил первое кругосветное плавание?",a:"Фернан Магеллан",o:["Христофор Колумб","Френсис Дрейк","Джеймс Кук"]},
+{t:"c",p:"p4",q:"Когда было первое кругосветное плавание Магеллана?",a:"С 1519 по 1522 год",o:["С 1487 по 1492","С 1498 по 1500","С 1577 по 1580"]},
+{t:"c",p:"p4",q:"Что доказало плавание Магеллана?",a:"Шарообразность Земли и единство Мирового океана",o:["Что Америка это Индия","Что Антарктида существует","Что Земля плоская"]},
+{t:"c",p:"p4",q:"Что такое пряности?",a:"Высушенные тропические растения, в Европе ценились на вес золота",o:["Драгоценные камни","Шёлковые ткани","Лекарства из Индии"]},
+{t:"c",p:"p4",q:"Что называют Новым Светом?",a:"Америку",o:["Австралию","Африку","Антарктиду"]},
+{t:"c",p:"p4",q:"Почему острова Карибского моря называют Вест-Индией?",a:"Из-за ошибки Колумба, который считал, что дошёл до Индии",o:["Там жили индийцы","Их открыли из Индии","Так назвал Магеллан"]},
+{t:"c",p:"p4",q:"Кто такие конкистадоры?",a:"Испанские и португальские завоеватели Америки",o:["Арабские купцы","Скандинавские мореходы","Коренные жители Австралии"]},
+{t:"c",p:"p4",q:"Что такое фактория?",a:"Торговое поселение купцов в далёких землях",o:["Военная крепость","Монастырь","Порт в Европе"]},
+{t:"c",p:"p4",q:"Чем открытие Америки обернулось для её коренных народов?",a:"Гибелью цивилизаций, болезнями и рабством",o:["Расцветом торговли","Появлением университетов","Ничем не изменило жизнь"]},
+// § 5
+{t:"c",p:"p5",q:"Кто совершил второе кругосветное плавание?",a:"Френсис Дрейк",o:["Джеймс Кук","Абель Тасман","Виллем Баренц"]},
+{t:"c",p:"p5",q:"Чем знаменит пролив Дрейка?",a:"Это самый широкий пролив на Земле, он соединяет Атлантический и Тихий океаны",o:["Самый узкий пролив","Самый длинный канал","Самое глубокое море"]},
+{t:"c",p:"p5",q:"Кто исследовал северные моря в поисках пути в Азию?",a:"Виллем Баренц",o:["Френсис Дрейк","Абель Тасман","Руаль Амундсен"]},
+{t:"c",p:"p5",q:"Какая страна стала в XVII веке центром картографии?",a:"Нидерланды",o:["Португалия","Испания","Россия"]},
+{t:"c",p:"p5",q:"Кто создал первые современные атласы?",a:"Меркатор и Ортелий",o:["Птолемей и Страбон","Кук и Тасман","Дрейк и Баренц"]},
+{t:"c",p:"p5",q:"Что такое атлас?",a:"Собрание географических карт",o:["Прибор для измерения высоты","Описание путешествия","Модель Земли"]},
+{t:"c",p:"p5",q:"Что означает Terra Australis Incognita?",a:"«Неведомая Южная Земля»",o:["«Новый Свет»","«Южный полюс»","«Великий океан»"]},
+{t:"c",p:"p5",q:"Кто нашёл земли вблизи «Неведомой Южной Земли» в XVII веке?",a:"Абель Тасман",o:["Джеймс Кук","Френсис Дрейк","Руаль Амундсен"]},
+{t:"c",p:"p5",q:"За кем закрепилось открытие Австралии?",a:"За Джеймсом Куком",o:["За Абелем Тасманом","За Магелланом","За Дрейком"]},
+{t:"c",p:"p5",q:"Кого называют аборигенами?",a:"Коренное население Австралии",o:["Жителей Гренландии","Арабских купцов","Моряков Кука"]},
+{t:"c",p:"p5",q:"Кто открыл Антарктиду?",a:"Беллинсгаузен и Лазарев",o:["Кук и Тасман","Пири и Амундсен","Дрейк и Баренц"]},
+{t:"y",p:"p5",q:"В каком году открыли Антарктиду?",a:"1820"},
+{t:"c",p:"p5",q:"Какой материк был открыт последним?",a:"Антарктида",o:["Австралия","Америка","Африка"]},
+{t:"c",p:"p5",q:"Кто изучал внутренние районы материков в XIX веке?",a:"Гумбольдт, Ливингстон, Пржевальский",o:["Кук, Тасман, Дрейк","Колумб, Магеллан, да Гама","Пири, Амундсен, Хейердал"]},
+{t:"c",p:"p5",q:"Кто первым достиг Северного полюса?",a:"Роберт Пири",o:["Руаль Амундсен","Джеймс Кук","Тур Хейердал"]},
+{t:"c",p:"p5",q:"Кто первым достиг Южного полюса?",a:"Руаль Амундсен",o:["Роберт Пири","Фритьоф Нансен","Виллем Баренц"]},
+{t:"c",p:"p5",q:"Что стало последним крупным открытием на суше?",a:"Хребет Черского в 1920-е годы",o:["Пролив Дрейка","Остров Гренландия","Мыс Доброй Надежды"]},
+{t:"c",p:"p5",q:"Что такое «Кон-Тики»?",a:"Плот Тура Хейердала, доказавший возможность древних плаваний между материками",o:["Корабль Магеллана","Атлас Меркатора","Судно викингов"]},
+{t:"c",p:"p5",q:"Какие культуры привезли в Европу из Америки?",a:"Картофель, томаты, кукурузу",o:["Пшеницу, рожь, овёс","Перец, корицу, гвоздику","Рис, чай, сою"]},
+{t:"c",p:"p5",q:"Что такое Северо-восточный и Северо-западный проходы?",a:"Морские пути вдоль северных берегов Евразии и Северной Америки",o:["Проливы у Антарктиды","Горные перевалы в Азии","Каналы в Нидерландах"]}
+];
+
+const KEY = "geo5-rounds-v1";
+const GOAL = 5;
+const el = id => document.getElementById(id);
+let rounds = {};
+try { rounds = JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e) { rounds = {}; }
+const save = () => localStorage.setItem(KEY, JSON.stringify(rounds));
+
+let state = null;
+
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function dots(n){
+  let s = '<span class="rounds">';
+  for(let i=1;i<=GOAL;i++) s += `<span class="dot${i<=n?' done':''}">${i<=n?'✓':i}</span>`;
+  s += `<span>${n} из ${GOAL}</span></span>`;
+  return s;
+}
+
+function renderMenu(){
+  el("menu").classList.remove("hid");
+  el("game").classList.add("hid");
+  el("result").classList.add("hid");
+  let h = "";
+  TOPICS.forEach(t=>{
+    const n = rounds[t.id] || 0;
+    const total = Q.filter(q=>q.p===t.id).length;
+    h += `<button class="topic" data-topic="${t.id}">${t.name}
+          <div style="font-weight:400;font-size:14px;color:var(--muted);margin-top:4px">
+          ${total} вопросов &nbsp; ${dots(n)}</div></button>`;
+  });
+  const na = rounds["all"] || 0;
+  el("topics").innerHTML = h;
+  el("btn-all").innerHTML = `Все параграфы подряд (${Q.length} вопросов, пройдено ${na} из ${GOAL})`;
+  document.querySelectorAll("[data-topic]").forEach(b=>b.onclick=()=>start(b.dataset.topic));
+}
+
+function start(topicId){
+  const list = topicId==="all" ? Q.slice() : Q.filter(q=>q.p===topicId);
+  state = { topicId, queue: shuffle(list), total: list.length, asked: list.length,
+            done: 0, firstTry: 0, errors: [], cur: null, answered: false };
+  el("menu").classList.add("hid");
+  el("result").classList.add("hid");
+  el("game").classList.remove("hid");
+  el("g-topic").textContent = topicId==="all" ? "Все параграфы" : TOPICS.find(t=>t.id===topicId).name;
+  next();
+}
+
+function next(){
+  if(!state.queue.length){ finish(); return; }
+  state.cur = state.queue.shift();
+  state.answered = false;
+  const q = state.cur;
+  el("g-count").textContent = `${state.done + 1} из ${state.total}`;
+  el("g-bar").style.width = Math.round(state.done / state.total * 100) + "%";
+  el("g-q").textContent = q.q;
+  el("g-verdict").className = "verdict hid";
+  el("g-next").classList.add("hid");
+  if(q.t === "y"){
+    el("g-opts").innerHTML = "";
+    el("g-input").classList.remove("hid");
+    el("g-text").value = "";
+    el("g-text").focus();
+  } else {
+    el("g-input").classList.add("hid");
+    const opts = shuffle([q.a].concat(q.o));
+    el("g-opts").innerHTML = opts.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("");
+    document.querySelectorAll(".opt").forEach(b=>{
+      b.onclick = ()=> answer(b.textContent.trim() === q.a, b);
+    });
+  }
+}
+
+function answer(correct, btn){
+  if(state.answered) return;
+  state.answered = true;
+  const q = state.cur;
+  if(correct){
+    if(!q.retry) state.firstTry++;
+    if(btn) btn.classList.add("ok");
+    el("g-verdict").className = "verdict ok";
+    el("g-verdict").textContent = "Верно";
+  } else {
+    state.errors.push(q);
+    state.queue.push(Object.assign({}, q, {retry:true}));   // ошибку повторим в конце круга
+    state.total++;
+    if(btn) btn.classList.add("bad");
+    document.querySelectorAll(".opt").forEach(b=>{
+      if(b.textContent.trim() === q.a) b.classList.add("ok");
+    });
+    el("g-verdict").className = "verdict bad";
+    el("g-verdict").textContent = "Правильный ответ: " + q.a + ". Вопрос повторится в конце.";
+  }
+  state.done++;
+  el("g-next").classList.remove("hid");
+  el("g-next").focus();
+}
+
+function finish(){
+  const t = state.topicId;
+  rounds[t] = (rounds[t] || 0) + 1;
+  save();
+  el("game").classList.add("hid");
+  el("result").classList.remove("hid");
+  const name = t==="all" ? "Все параграфы" : TOPICS.find(x=>x.id===t).name;
+  const asked = state.asked;
+  const pct = Math.round(state.firstTry / asked * 100);
+  el("r-topic").textContent = name;
+  el("r-score").textContent = `${state.firstTry} из ${asked} с первой попытки (${pct} %)`;
+  el("r-text").innerHTML = `Пройдено кругов: ${dots(rounds[t])}` +
+    (rounds[t] >= GOAL ? "<p><b>Пять кругов готово. Эту тему можно считать выученной.</b></p>"
+                       : "<p>Пройди ещё раз, пока не наберёшь пять кругов.</p>");
+  if(state.errors.length){
+    const seen = [];
+    const uniq = state.errors.filter(e=> seen.includes(e.q) ? false : (seen.push(e.q), true));
+    el("r-errors").innerHTML = "<p><b>Что повторить:</b></p><ul class='err'>" +
+      uniq.map(e=>`<li>${e.q}<br><b>${e.a}</b></li>`).join("") + "</ul>";
+  } else {
+    el("r-errors").innerHTML = "<p>Ошибок нет.</p>";
+  }
+  el("r-again").onclick = ()=> start(t);
+}
+
+el("btn-all").onclick = ()=> start("all");
+el("btn-reset").onclick = ()=>{ if(confirm("Сбросить счёт кругов?")){ rounds = {}; save(); renderMenu(); } };
+el("g-next").onclick = next;
+el("g-quit").onclick = renderMenu;
+el("r-menu").onclick = renderMenu;
+el("g-check").onclick = ()=>{
+  const v = el("g-text").value.trim().replace(/[^0-9]/g,"");
+  answer(v === state.cur.a, null);
+};
+el("g-text").addEventListener("keydown", e=>{ if(e.key==="Enter") el("g-check").click(); });
+
+renderMenu();
+</script>
+</body>
+</html>
